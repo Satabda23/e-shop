@@ -4,16 +4,11 @@ import jwt from "../../middleware/jwt";
 
 const router = express.Router();
 
-const verifyAccessToken = jwt.verifyAccessToken;
+// Public OTP Authentication
+router.post("/login/send-otp", AuthController.loginSendOtp);
+router.post("/login/verify-otp", AuthController.loginVerifyOtp);
 
-// Public Routes
-router.post("/register", AuthController.register);
-
-router.post("/login", AuthController.login);
-
-// Protected Routes
-router.get("/profile", verifyAccessToken, AuthController.profile);
-
-router.post("/logout", verifyAccessToken, AuthController.logout);
+// Protected Customer Profile
+router.get("/me", jwt.verifyAccessToken, AuthController.getMe);
 
 export default router;

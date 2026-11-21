@@ -5,7 +5,10 @@ export const USER_ROLES = {
   CUSTOMER: 2,
 } as const;
 
-
+export const ACCOUNT_STATUS = {
+  ACTIVE: 1,
+  SUSPENDED: 2,
+} as const;
 
 export const USER_ROLE_LABELS = {
   [USER_ROLES.ADMIN]: "Admin",

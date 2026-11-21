@@ -5,8 +5,8 @@ export type UserStatus = (typeof USER_STATUS)[keyof typeof USER_STATUS];
 
 export interface UserAttributes {
   id?: number;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   email?: string;
   phone: string;
   role: UserRole;

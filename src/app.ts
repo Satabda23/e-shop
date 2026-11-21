@@ -10,6 +10,9 @@ import { APP_PORT } from "./config";
 import Sequelize from "./config/sequelize";
 import router from "./routes";
 
+import "./workers/otp.worker";
+import { serverAdapter } from "./config/bullboard";
+
 const app = express();
 app.set("trust proxy", 1);
 const corsOptions = {
@@ -34,6 +37,7 @@ app.use(morgan("dev"));
 app.use(express.urlencoded({ limit: "50mb", extended: false }));
 app.use(express.json({ limit: "50mb" }));
 // app.use(express.static('public'));
+app.use("/admin/queues", serverAdapter.getRouter());
 app.use(router);
 
 app.use((req: Request, res: Response) => {
@@ -62,21 +66,15 @@ let server: any;
 
 async function startServer() {
   try {
-    console.log("1 - Starting");
-console.log("2 - Before DB");
-
     await Sequelize.authenticate();
-    console.log("3 - After DB");
     console.log("Database Connected");
     if (process.env.NODE_ENV !== "production") {
       await Sequelize.sync({ alter: false, force: false });
-
       console.log("All models synchronized successfully.");
     }
-
     server = app.listen(APP_PORT, () => {
       console.log(`Server running on PORT ${APP_PORT}`);
-
+      console.log(`BullMQ Queue Dashboard available at: http://localhost:${APP_PORT}/admin/queues`);
       if (process.send) {
         process.send("ready");
       }
@@ -86,34 +84,26 @@ console.log("2 - Before DB");
     process.exit(1);
   }
 }
-
 startServer();
-
 function gracefulShutdown(signal: string) {
   console.log(`${signal} received. Shutting down gracefully...`);
-
   if (server) {
     server.close(async () => {
       console.log("HTTP server closed.");
-
       try {
         await Sequelize.close();
         console.log("Database connection closed.");
       } catch (err) {
         console.error("Error closing DB:", err);
       }
-
       process.exit(0);
     });
-
     setTimeout(() => {
       console.error("Forcefully shutting down...");
       process.exit(1);
     }, 10000);
   }
 }
-
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-
 export default app;
